@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react'
 import './App.css'
 
 const gradeScale = [
-  { label: 'O', points: 10 },
-  { label: 'A+', points: 9 },
-  { label: 'A', points: 8 },
-  { label: 'B+', points: 7 },
-  { label: 'B', points: 6 },
-  { label: 'C', points: 5 },
-  { label: 'P', points: 4 },
+  { label: 'Excellent', points: 10 },
+  { label: 'A', points: 9 },
+  { label: 'B', points: 8 },
+  { label: 'C', points: 7 },
+  { label: 'D', points: 6 },
+  { label: 'P', points: 5 },
+  { label: 'M', points: 4 },
   { label: 'F', points: 0 },
 ]
 
