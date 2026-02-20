@@ -66,6 +66,26 @@ h1 {
   color: var(--text-secondary);
 }
 
+.subject-count-control {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.subject-count-control input {
+  max-width: 240px;
+}
+
+.empty-state {
+  margin: 1rem 0;
+  padding: 0.9rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.52);
+}
+
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -175,6 +195,15 @@ button:disabled {
   .calculator-card {
     padding: 1rem;
     border-radius: 16px;
+  }
+
+  .subject-count-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subject-count-control input {
+    max-width: none;
   }
 
   .result {
