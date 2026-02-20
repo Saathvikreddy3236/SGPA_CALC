@@ -62,7 +62,7 @@ function App() {
           <p className="kicker">Academic Toolkit</p>
           <h1>SGPA Calculator</h1>
           <p className="subtitle">
-            Add subjects, enter credits, choose grades, and get your semester GPA instantly.
+            Subject names are optional. Enter credits and grades to get your semester GPA instantly.
           </p>
         </header>
 
@@ -70,7 +70,7 @@ function App() {
           <table>
             <thead>
               <tr>
-                <th>Subject</th>
+                <th>Subject (Optional)</th>
                 <th>Credits</th>
                 <th>Grade</th>
                 <th>Action</th>
@@ -84,7 +84,7 @@ function App() {
                       type="text"
                       value={row.subject}
                       onChange={(event) => updateRow(row.id, 'subject', event.target.value)}
-                      placeholder={`Subject ${index + 1}`}
+                      placeholder={`Subject ${index + 1} (Optional)`}
                     />
                   </td>
                   <td>
@@ -155,3 +155,4 @@ function App() {
 }
 
 export default App
+
