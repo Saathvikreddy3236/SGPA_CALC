@@ -25,13 +25,22 @@ function App() {
   const [subjectCountInput, setSubjectCountInput] = useState('')
 
   const totals = useMemo(() => {
-    const totalCredits = rows.reduce((sum, row) => sum + Number(row.credits || 0), 0)
+    const attemptedCredits = rows.reduce((sum, row) => sum + Number(row.credits || 0), 0)
+
+    const totalCredits = rows.reduce((sum, row) => {
+      if (row.grade === 'F') {
+        return sum
+      }
+
+      return sum + Number(row.credits || 0)
+    }, 0)
+
     const totalPoints = rows.reduce((sum, row) => {
       const grade = gradeScale.find((entry) => entry.label === row.grade)
       return sum + Number(row.credits || 0) * (grade?.points ?? 0)
     }, 0)
 
-    const sgpa = totalCredits > 0 ? totalPoints / totalCredits : 0
+    const sgpa = attemptedCredits > 0 ? totalPoints / attemptedCredits : 0
 
     return { totalCredits, totalPoints, sgpa }
   }, [rows])
@@ -123,10 +132,15 @@ function App() {
                         <input
                           type="number"
                           min="0"
+                          max="5"
                           step="1"
                           value={row.credits}
                           onChange={(event) =>
-                            updateRow(row.id, 'credits', Math.max(0, Number(event.target.value || 0)))
+                            updateRow(
+                              row.id,
+                              'credits',
+                              Math.min(5, Math.max(0, Number(event.target.value || 0))),
+                            )
                           }
                         />
                       </td>
