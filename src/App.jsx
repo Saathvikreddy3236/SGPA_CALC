@@ -98,7 +98,7 @@ function App() {
       <div className="card-container">
         {/* Header */}
         <header className="app-header">
-          <div className="badge">🎓 Academic Calculator</div>
+          <div className="badge">🎓 GPACalc</div>
           <h1>{mode === 'sgpa' ? 'SGPA Calculator' : 'CGPA Calculator'}</h1>
           <p className="subtitle">
             {mode === 'sgpa'
