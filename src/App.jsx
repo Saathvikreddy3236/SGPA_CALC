@@ -2,75 +2,71 @@ import { useMemo, useState } from 'react'
 import './App.css'
 
 const gradeScale = [
-  { label: 'Excellent', points: 10 },
-  { label: 'A', points: 9 },
-  { label: 'B', points: 8 },
-  { label: 'C', points: 7 },
-  { label: 'D', points: 6 },
-  { label: 'P', points: 5 },
-  { label: 'M', points: 4 },
-  { label: 'F', points: 0 },
+  { points: 10, grade: 'Ex', label: '10 Points (Grade Ex - Excellent)' },
+  { points: 9, grade: 'A', label: '9 Points (Grade A)' },
+  { points: 8, grade: 'B', label: '8 Points (Grade B)' },
+  { points: 7, grade: 'C', label: '7 Points (Grade C)' },
+  { points: 6, grade: 'D', label: '6 Points (Grade D)' },
+  { points: 5, grade: 'P', label: '5 Points (Grade P - Pass)' },
+  { points: 4, grade: 'M', label: '4 Points (Grade M - Marginal)' },
+  { points: 0, grade: 'F', label: '0 Points (Grade F - Fail)' },
 ]
 
 const defaultRow = (id) => ({
   id,
   subject: '',
   credits: 3,
-  grade: 'A',
+  points: 9,
 })
 
 const defaultSemRow = (id) => ({
   id,
   semester: `Semester ${id}`,
   credits: 20,
-  sgpa: 8,
+  sgpa: 8.0,
 })
+
+const getInitialRows = (mode) => {
+  return Array.from({ length: 5 }, (_, i) =>
+    mode === 'sgpa' ? defaultRow(i + 1) : defaultSemRow(i + 1)
+  )
+}
 
 function App() {
   const [mode, setMode] = useState('sgpa')
-  const [rows, setRows] = useState([])
-  const [nextId, setNextId] = useState(1)
-  const [subjectCountInput, setSubjectCountInput] = useState('')
+  const [rows, setRows] = useState(() => getInitialRows('sgpa'))
+  const [nextId, setNextId] = useState(6)
 
   const totals = useMemo(() => {
     if (mode === 'cgpa') {
       const attemptedCredits = rows.reduce((sum, row) => sum + Number(row.credits || 0), 0)
       const totalPoints = rows.reduce(
         (sum, row) => sum + Number(row.credits || 0) * Number(row.sgpa || 0),
-        0,
+        0
       )
       const cgpa = attemptedCredits > 0 ? totalPoints / attemptedCredits : 0
 
       return {
         totalCredits: attemptedCredits,
         totalPoints,
-        sgpa: cgpa,
+        gpa: cgpa,
       }
     }
 
     const attemptedCredits = rows.reduce((sum, row) => sum + Number(row.credits || 0), 0)
 
-    const totalCredits = rows.reduce((sum, row) => {
-      if (row.grade === 'F') {
-        return sum
-      }
-
-      return sum + Number(row.credits || 0)
-    }, 0)
-
     const totalPoints = rows.reduce((sum, row) => {
-      const grade = gradeScale.find((entry) => entry.label === row.grade)
-      return sum + Number(row.credits || 0) * (grade?.points ?? 0)
+      return sum + Number(row.credits || 0) * Number(row.points ?? 0)
     }, 0)
 
     const sgpa = attemptedCredits > 0 ? totalPoints / attemptedCredits : 0
 
-    return { totalCredits, totalPoints, sgpa }
+    return { totalCredits: attemptedCredits, totalPoints, gpa: sgpa }
   }, [rows, mode])
 
   const updateRow = (id, field, value) => {
     setRows((currentRows) =>
-      currentRows.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+      currentRows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
     )
   }
 
@@ -89,171 +85,139 @@ function App() {
   const resetAll = () => {
     setRows([])
     setNextId(1)
-    setSubjectCountInput('')
-  }
-
-  const generateSubjects = () => {
-    const count = Number(subjectCountInput)
-
-    if (!Number.isInteger(count) || count < 1) {
-      return
-    }
-
-    const newRows = Array.from(
-      { length: count },
-      (_, index) => (mode === 'sgpa' ? defaultRow(index + 1) : defaultSemRow(index + 1)),
-    )
-    setRows(newRows)
-    setNextId(count + 1)
   }
 
   const switchMode = (nextMode) => {
     setMode(nextMode)
-    setRows([])
-    setNextId(1)
-    setSubjectCountInput('')
+    setRows(getInitialRows(nextMode))
+    setNextId(6)
   }
 
   return (
-    <main className="page">
-      <section className="calculator-card">
-        <header className="hero">
-          <p className="kicker">Academic Toolkit</p>
+    <main className="page-wrapper">
+      <div className="card-container">
+        {/* Header */}
+        <header className="app-header">
+          <div className="badge">🎓 Academic Calculator</div>
           <h1>{mode === 'sgpa' ? 'SGPA Calculator' : 'CGPA Calculator'}</h1>
           <p className="subtitle">
             {mode === 'sgpa'
-              ? 'Subject names are optional. Enter credits and grades to get your semester GPA instantly.'
-              : 'Enter each semester credits and SGPA to get your overall CGPA instantly.'}
+              ? 'Enter course credits (1-10) and grade points to calculate your semester GPA instantly.'
+              : 'Enter semester credits and SGPA scores to calculate your cumulative CGPA.'}
           </p>
         </header>
 
-        <div className="actions">
+        {/* Mode Selector */}
+        <div className="mode-toggle">
           <button
             type="button"
-            className="ghost"
+            className={`toggle-btn ${mode === 'sgpa' ? 'active' : ''}`}
             onClick={() => switchMode('sgpa')}
-            disabled={mode === 'sgpa'}
           >
-            SGPA
+            📘 SGPA Mode
           </button>
           <button
             type="button"
-            className="ghost"
+            className={`toggle-btn ${mode === 'cgpa' ? 'active' : ''}`}
             onClick={() => switchMode('cgpa')}
-            disabled={mode === 'cgpa'}
           >
-            CGPA
+            📊 CGPA Mode
           </button>
         </div>
 
-        <div className="subject-count-control">
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={subjectCountInput}
-            placeholder={mode === 'sgpa' ? 'Enter no. of subjects' : 'Enter no. of semesters'}
-            onChange={(event) => setSubjectCountInput(event.target.value)}
-          />
-          <button type="button" className="ghost" onClick={generateSubjects}>
-            {mode === 'sgpa' ? 'Create Subjects' : 'Create Semesters'}
-          </button>
-        </div>
-
+        {/* Table / Form Rows */}
         {rows.length === 0 ? (
-          <p className="empty-state">
-            {mode === 'sgpa'
-              ? 'Enter no. of subjects and click "Create Subjects" to continue.'
-              : 'Enter no. of semesters and click "Create Semesters" to continue.'}
-          </p>
+          <div className="empty-box">
+            <p>No entries added. Click below to add your first entry.</p>
+            <button type="button" className="btn btn-primary" onClick={addRow}>
+              {mode === 'sgpa' ? '+ Add Subject' : '+ Add Semester'}
+            </button>
+          </div>
         ) : (
           <>
-            <div className="table-wrap">
-              <table>
+            <div className="table-responsive">
+              <table className="calc-table">
                 <thead>
                   <tr>
-                    <th>{mode === 'sgpa' ? 'Subject (Optional)' : 'Semester'}</th>
-                    <th>Credits</th>
-                    <th>{mode === 'sgpa' ? 'Grade' : 'SGPA'}</th>
-                    <th>Action</th>
+                    <th>{mode === 'sgpa' ? 'Subject Name (Optional)' : 'Semester'}</th>
+                    <th>Credits (1-10)</th>
+                    <th>{mode === 'sgpa' ? 'Grade Points (0-10)' : 'SGPA'}</th>
+                    <th style={{ textAlign: 'center' }}>Remove</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, index) => (
                     <tr key={row.id}>
-                      <td>
+                      <td className="cell-subject">
+                        <span className="mobile-label">
+                          {mode === 'sgpa' ? `Subject #${index + 1}` : `Semester #${index + 1}`}
+                        </span>
                         {mode === 'sgpa' ? (
                           <input
                             type="text"
+                            className="input-field"
                             value={row.subject}
-                            onChange={(event) => updateRow(row.id, 'subject', event.target.value)}
-                            placeholder={`Subject ${index + 1} (Optional)`}
+                            onChange={(e) => updateRow(row.id, 'subject', e.target.value)}
+                            placeholder={`Subject ${index + 1}`}
                           />
                         ) : (
                           <input
                             type="text"
+                            className="input-field"
                             value={row.semester}
-                            onChange={(event) => updateRow(row.id, 'semester', event.target.value)}
+                            onChange={(e) => updateRow(row.id, 'semester', e.target.value)}
                             placeholder={`Semester ${index + 1}`}
                           />
                         )}
                       </td>
-                      <td>
+                      <td className="cell-credits">
+                        <span className="mobile-label">Credits (1-10)</span>
                         <input
                           type="number"
-                          min="0"
-                          max={mode === 'sgpa' ? '5' : '40'}
+                          className="input-field number-input"
+                          min="1"
+                          max="10"
                           step="1"
                           value={row.credits}
-                          onChange={(event) =>
-                            updateRow(
-                              row.id,
-                              'credits',
-                              Math.min(
-                                mode === 'sgpa' ? 5 : 40,
-                                Math.max(0, Number(event.target.value || 0)),
-                              ),
-                            )
-                          }
+                          onChange={(e) => updateRow(row.id, 'credits', e.target.value)}
                         />
                       </td>
-                      <td>
+                      <td className="cell-grade">
+                        <span className="mobile-label">
+                          {mode === 'sgpa' ? 'Grade Points' : 'SGPA'}
+                        </span>
                         {mode === 'sgpa' ? (
                           <select
-                            value={row.grade}
-                            onChange={(event) => updateRow(row.id, 'grade', event.target.value)}
+                            className="select-field"
+                            value={row.points}
+                            onChange={(e) => updateRow(row.id, 'points', Number(e.target.value))}
                           >
-                            {gradeScale.map((grade) => (
-                              <option key={grade.label} value={grade.label}>
-                                {grade.label} ({grade.points})
+                            {gradeScale.map((item) => (
+                              <option key={item.points} value={item.points}>
+                                {item.label}
                               </option>
                             ))}
                           </select>
                         ) : (
                           <input
                             type="number"
+                            className="input-field number-input"
                             min="0"
                             max="10"
-                            step="0.01"
+                            step="0.0001"
                             value={row.sgpa}
-                            onChange={(event) =>
-                              updateRow(
-                                row.id,
-                                'sgpa',
-                                Math.min(10, Math.max(0, Number(event.target.value || 0))),
-                              )
-                            }
+                            onChange={(e) => updateRow(row.id, 'sgpa', e.target.value)}
                           />
                         )}
                       </td>
-                      <td>
+                      <td className="cell-action">
                         <button
                           type="button"
-                          className="ghost danger"
+                          className="btn-danger"
                           onClick={() => removeRow(row.id)}
-                          disabled={rows.length === 1}
+                          title="Remove entry"
                         >
-                          Remove
+                          ✕ Remove
                         </button>
                       </td>
                     </tr>
@@ -262,35 +226,67 @@ function App() {
               </table>
             </div>
 
-            <div className="actions">
-              <button type="button" className="ghost" onClick={addRow}>
+            <div className="action-buttons">
+              <button type="button" className="btn btn-primary" onClick={addRow}>
                 {mode === 'sgpa' ? '+ Add Subject' : '+ Add Semester'}
               </button>
-              <button type="button" className="ghost" onClick={resetAll}>
-                Reset
+              <button type="button" className="btn btn-secondary" onClick={resetAll}>
+                Reset All
               </button>
             </div>
           </>
         )}
 
-        <section className="result">
-          <div>
-            <p>Total Credits</p>
-            <strong>{totals.totalCredits}</strong>
+        {/* Results Section */}
+        <section className="results-card">
+          <div className="result-item">
+            <span className="result-label">Total Credits</span>
+            <strong className="result-value">{totals.totalCredits}</strong>
           </div>
-          <div>
-            <p>{mode === 'sgpa' ? 'Total Grade Points' : 'Total Weighted Points'}</p>
-            <strong>{totals.totalPoints.toFixed(2)}</strong>
+          <div className="result-item">
+            <span className="result-label">
+              {mode === 'sgpa' ? 'Grade Points' : 'Weighted Points'}
+            </span>
+            <strong className="result-value">{totals.totalPoints.toFixed(4)}</strong>
           </div>
-          <div>
-            <p>{mode === 'sgpa' ? 'SGPA' : 'CGPA'}</p>
-            <strong>{totals.sgpa.toFixed(2)}</strong>
+          <div className="result-item score-highlight">
+            <span className="result-label">{mode === 'sgpa' ? 'SGPA' : 'CGPA'}</span>
+            <strong className="result-score">{totals.gpa.toFixed(4)}</strong>
           </div>
         </section>
-      </section>
+
+        {/* Separate Reference Section Explaining Grades and Points */}
+        <section className="reference-section">
+          <h3 className="reference-title">📖 Grade & Points Reference Chart</h3>
+          <div className="reference-grid">
+            {gradeScale.map((item) => (
+              <div key={item.points} className="reference-card">
+                <span className="ref-points">{item.points} Grade Points</span>
+                <span className="ref-grade">Grade Letter: {item.grade}</span>
+                <span className="ref-desc">
+                  {item.points === 10
+                    ? 'Ex (Excellent) or S or O'
+                    : item.points === 9
+                      ? 'A (Very Good)'
+                      : item.points === 8
+                        ? 'B (Good)'
+                        : item.points === 7
+                          ? 'C (Above Average)'
+                          : item.points === 6
+                            ? 'D (Average)'
+                            : item.points === 5
+                              ? 'P (Pass)'
+                              : item.points === 4
+                                ? 'M (Marginal Pass)'
+                                : 'F (Fail)'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </main>
   )
 }
 
 export default App
-
